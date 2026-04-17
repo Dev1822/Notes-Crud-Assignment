@@ -52,3 +52,20 @@ exports.getAll=async(req,res)=>{
         });
     }
 }
+
+exports.getById=async(req,res)=>{
+    try{
+        const note=await Note.find({_id:req.params.id});
+        res.status(201).json({
+            "success": true,
+            "message": "Note fetched successfully",
+            "data": note
+        })
+    }
+    catch(error){
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+}
