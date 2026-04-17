@@ -8,6 +8,7 @@ router.post("/api/notes/bulk",controller.createBulk);
 router.get("/api/notes",controller.getAll);
 router.get("/api/notes/:id",controller.getById);
 router.put("/api/notes/:id",controller.replaceNote);
+router.patch("/api/notes/:id",controller.updateNote);
 
 
 module.exports = router;
