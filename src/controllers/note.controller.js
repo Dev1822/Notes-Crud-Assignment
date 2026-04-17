@@ -1,7 +1,17 @@
 const Note = require("../models/note.model");
+const mongoose = require("mongoose");
 
 exports.createNote = async (req, res) => {
     try {
+        const { title, content } = req.body;
+
+        if (!title || !content) {
+            return res.status(400).json({
+                success: false,
+                message: "Title and content are required"
+            });
+        }
+
         const newNote = new Note(req.body);
         await newNote.save();
 
@@ -10,6 +20,7 @@ exports.createNote = async (req, res) => {
             message: "Note created successfully",
             data: newNote
         });
+
     } catch (error) {
         res.status(400).json({
             success: false,
@@ -18,60 +29,98 @@ exports.createNote = async (req, res) => {
     }
 };
 
-exports.createBulk=async(req,res)=>{
-    try{
-        const newNotes=await Note.insertMany(req.body["notes"]);
-        const length=req.body["notes"].length;
+exports.createBulk = async (req, res) => {
+    try {
+        const { notes } = req.body;
+
+        if (!Array.isArray(notes) || notes.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Notes array is required and cannot be empty"
+            });
+        }
+
+        const newNotes = await Note.insertMany(notes);
+
         res.status(201).json({
             success: true,
-            message: `${length} notes created successfully`,
+            message: `${notes.length} notes created successfully`,
             data: newNotes
         });
-    }
-    catch(error){
+
+    } catch (error) {
         res.status(400).json({
             success: false,
             message: error.message
         });
     }
-}
+};
 
-exports.getAll=async(req,res)=>{
-    try{
-        const notes=await Note.find();
+exports.getAll = async (req, res) => {
+    try {
+        const notes = await Note.find();
+
         res.status(200).json({
             success: true,
             message: "Notes fetched successfully",
             data: notes
         });
-    }
-    catch(error){
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
-    }
-}
 
-exports.getById=async(req,res)=>{
-    try{
-        const note=await Note.find({_id:req.params.id});
-        res.status(200).json({
-            "success": true,
-            "message": "Note fetched successfully",
-            "data": note
-        })
-    }
-    catch(error){
+    } catch (error) {
         res.status(400).json({
             success: false,
             message: error.message
         });
     }
-}
+};
+
+exports.getById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+         
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid ID format"
+            });
+        }
+
+        const note = await Note.findById(id);
+
+        if (!note) {
+            return res.status(404).json({
+                success: false,
+                message: "Note not found"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Note fetched successfully",
+            data: note
+        });
+
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
 
 exports.replaceNote = async (req, res) => {
     try {
+        const { id } = req.params;
+
+         
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid ID format"
+            });
+        }
+
         const { title, content, category, isPinned } = req.body;
 
         if (
@@ -87,18 +136,9 @@ exports.replaceNote = async (req, res) => {
         }
 
         const updatedNote = await Note.findByIdAndUpdate(
-            req.params.id,
-            {
-                title,
-                content,
-                category,
-                isPinned
-            },
-            {
-                new: true,
-                overwrite: true,
-                runValidators: true
-            }
+            id,
+            { title, content, category, isPinned },
+            { new: true, overwrite: true, runValidators: true }
         );
 
         if (!updatedNote) {
@@ -124,20 +164,27 @@ exports.replaceNote = async (req, res) => {
 
 exports.updateNote = async (req, res) => {
     try {
-        if (Object.keys(req.body).length === 0) {
+        const { id } = req.params;
+
+         
+        if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({
                 success: false,
-                message: "No fields provided for update"
+                message: "Invalid ID format"
+            });
+        }
+
+        if (!req.body || Object.keys(req.body).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "No fields provided to update"
             });
         }
 
         const updatedNote = await Note.findByIdAndUpdate(
-            req.params.id,
+            id,
             req.body,
-            {
-                new: true,
-                runValidators: true
-            }
+            { new: true, runValidators: true }
         );
 
         if (!updatedNote) {
@@ -163,7 +210,17 @@ exports.updateNote = async (req, res) => {
 
 exports.deleteNote = async (req, res) => {
     try {
-        const deletedNote = await Note.findByIdAndDelete(req.params.id);
+        const { id } = req.params;
+
+         
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid ID format"
+            });
+        }
+
+        const deletedNote = await Note.findByIdAndDelete(id);
 
         if (!deletedNote) {
             return res.status(404).json({
@@ -190,14 +247,12 @@ exports.deleteBulk = async (req, res) => {
     try {
         const { ids } = req.body;
 
-        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        if (!Array.isArray(ids) || ids.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: "Please provide a valid array of IDs"
+                message: "IDs array is required and cannot be empty"
             });
         }
-
-        const mongoose = require('mongoose');
 
         const validIds = ids.filter(id =>
             mongoose.Types.ObjectId.isValid(id)
