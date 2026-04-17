@@ -39,7 +39,7 @@ exports.createBulk=async(req,res)=>{
 exports.getAll=async(req,res)=>{
     try{
         const notes=await Note.find();
-        res.status(201).json({
+        res.status(200).json({
             success: true,
             message: "Notes fetched successfully",
             data: notes
@@ -56,7 +56,7 @@ exports.getAll=async(req,res)=>{
 exports.getById=async(req,res)=>{
     try{
         const note=await Note.find({_id:req.params.id});
-        res.status(201).json({
+        res.status(200).json({
             "success": true,
             "message": "Note fetched successfully",
             "data": note
@@ -69,3 +69,55 @@ exports.getById=async(req,res)=>{
         });
     }
 }
+
+exports.replaceNote = async (req, res) => {
+    try {
+        const { title, content, category, isPinned } = req.body;
+
+        if (
+            title === undefined ||
+            content === undefined ||
+            category === undefined ||
+            isPinned === undefined
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required for full replacement"
+            });
+        }
+
+        const updatedNote = await Note.findByIdAndUpdate(
+            req.params.id,
+            {
+                title,
+                content,
+                category,
+                isPinned
+            },
+            {
+                new: true,
+                overwrite: true,
+                runValidators: true
+            }
+        );
+
+        if (!updatedNote) {
+            return res.status(404).json({
+                success: false,
+                message: "Note not found"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Note replaced successfully",
+            data: updatedNote
+        });
+
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
