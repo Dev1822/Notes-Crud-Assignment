@@ -35,3 +35,20 @@ exports.createBulk=async(req,res)=>{
         });
     }
 }
+
+exports.getAll=async(req,res)=>{
+    try{
+        const notes=await Note.find();
+        res.status(201).json({
+            success: true,
+            message: "Notes fetched successfully",
+            data: notes
+        });
+    }
+    catch(error){
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+}
