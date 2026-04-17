@@ -9,6 +9,7 @@ router.get("/api/notes",controller.getAll);
 router.get("/api/notes/:id",controller.getById);
 router.put("/api/notes/:id",controller.replaceNote);
 router.patch("/api/notes/:id",controller.updateNote);
+router.delete("/api/notes/bulk",controller.deleteBulk);
 router.delete("/api/notes/:id",controller.deleteNote);
 
 

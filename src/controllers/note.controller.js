@@ -185,3 +185,45 @@ exports.deleteNote = async (req, res) => {
         });
     }
 };
+
+exports.deleteBulk = async (req, res) => {
+    try {
+        const { ids } = req.body;
+
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide a valid array of IDs"
+            });
+        }
+
+        const mongoose = require('mongoose');
+
+        const validIds = ids.filter(id =>
+            mongoose.Types.ObjectId.isValid(id)
+        );
+
+        if (validIds.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "No valid IDs provided"
+            });
+        }
+
+        const result = await Note.deleteMany({
+            _id: { $in: validIds }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: `${result.deletedCount} notes deleted successfully`,
+            data: null
+        });
+
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
